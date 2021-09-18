@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 @EnableWebSecurity
@@ -16,29 +17,29 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 		System.out.println("configure (Auth)");
-		/*auth.inMemoryAuthentication()
-		.withUser("prashant")
-		.password("9211")
-		.roles("ADMIN")
-		.and()
-		.withUser("Suman")
-		.password("9211")
-		.roles("USER");*/
-		auth.userDetailsService(userDetailsService);
+		auth.ldapAuthentication()
+	        .userDnPatterns("uid={0},ou=people")
+	        .groupSearchBase("ou=groups")
+	        .contextSource()
+	          .url("ldap://localhost:8389/dc=springframework,dc=org")
+	          .and()
+	        .passwordCompare()
+	          //.passwordEncoder(new BCryptPasswordEncoder()) for those user whose password in not encrypted
+	          .passwordAttribute("userPassword");
+	 
 	}
-	@Bean
+	/*@Bean
 	public PasswordEncoder getPasswordEncoder() {
 		return NoOpPasswordEncoder.getInstance();
-	}
+	}*/
 	@Override
 	public void configure(HttpSecurity http) throws Exception{
 		System.out.println("SecurityConfiguration.configure(HttpSecurity)");
-		http.authorizeRequests()
-		.antMatchers("/admin").hasRole("ADMIN")
-		.antMatchers("/user").hasAnyRole("USER","ADMIN")
-		.antMatchers("/").permitAll()
-		.and().formLogin();
-		// to use this one in database in role column we must store roles like "ROLE_ADMIN" "ROLE_USER"  and then use as hasAnyRole("USER","ADMIN") 
+		 http
+	      .authorizeRequests()
+	        .anyRequest().fullyAuthenticated()
+	        .and()
+	      .formLogin();
 		
 	}
 

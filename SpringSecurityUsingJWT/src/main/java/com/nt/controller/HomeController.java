@@ -1,5 +1,7 @@
 package com.nt.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,9 +17,6 @@ import com.nt.configuration.AuthenticationRequest;
 import com.nt.configuration.AuthenticationResponse;
 import com.nt.configuration.MyUserDetialsService;
 import com.nt.utility.JwtUtil;
-
-
-import ch.qos.logback.classic.Logger;
 @RestController
 public class HomeController {
 	@Autowired
@@ -26,6 +25,8 @@ public class HomeController {
 	private MyUserDetialsService userDetailsService;
 	@Autowired
 	private JwtUtil jwtUtil;
+	Logger logger=LoggerFactory.getLogger(HomeController.class);
+	
 
 	@GetMapping("/")
 	public String home() {
@@ -41,19 +42,18 @@ public class HomeController {
 	}
 	@PostMapping("/authenticate")
 	public ResponseEntity<?> createAuthenticateToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception{
-		System.out.println("HomeController.createAuthenticateToken()");
+		logger.trace("executed createAuthenticateToken method");
 		try {
 			authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(
 			authenticationRequest.getUsername(), authenticationRequest.getPassword()));
 		}
 		catch(BadCredentialsException e) { 
+			logger.error(" Bad Credentials ");
 			throw new Exception("Invalid username and password",e);
 		}
 		final UserDetails userDetails=userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 		final String jwt=jwtUtil.generateToken(userDetails);
 		return ResponseEntity.ok(new AuthenticationResponse(jwt));
-		
-		
 	}
 }

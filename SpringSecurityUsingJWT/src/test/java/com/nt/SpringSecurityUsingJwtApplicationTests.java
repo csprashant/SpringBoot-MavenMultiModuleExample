@@ -8,6 +8,7 @@ class SpringSecurityUsingJwtApplicationTests {
 
 	@Test
 	void contextLoads() {
+	System.out.println();
 	}
 
 }
